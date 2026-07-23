@@ -1,41 +1,63 @@
 # blog-starter
 
-> A GitHub Pages blog template with automated quiz generation and Telegram notifications.
-> Write a draft → push → quiz is auto-generated → publish via Telegram bot.
+[🇰🇷 한국어](docs/README.ko.md)
+
+> A GitHub Pages blog template with automated quiz generation and Telegram publish workflow.
+> Write a draft → push → quiz auto-generated → answer in Telegram → post goes live.
 
 ---
 
-## How it works
+## What this does
 
 ```
 You write a draft in drafts/
     ↓
 Push to GitHub
     ↓
-GitHub Actions: generate-quiz.py runs
+GitHub Actions: quiz generated via OpenAI → stored in Cloudflare KV
+Telegram notification sent
     ↓
-Quiz stored in Cloudflare KV
-Telegram notification sent to you
+You answer the quiz in Telegram (via quiz-publish-bot)
     ↓
-You answer the quiz in Telegram
-    ↓
-/publish command → post moves to src/content/posts/
+/publish → post moves to src/content/posts/
 Blog builds and deploys to GitHub Pages
 ```
 
 ---
 
-## Prerequisites
+## Before you start — checklist
 
-| Tool | Purpose | Install |
-|------|---------|---------|
-| Node.js 18+ | Astro build | [nodejs.org](https://nodejs.org) |
-| pnpm | Package manager | `npm install -g pnpm` |
-| Python 3.10+ | Quiz generation script | [python.org](https://python.org) |
-| GitHub account | Hosting | [github.com](https://github.com) |
-| OpenAI API key | Quiz generation | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
-| Telegram bot | Notifications + commands | [@BotFather](https://t.me/BotFather) |
-| Cloudflare account (free) | KV storage for quiz queue | [dash.cloudflare.com](https://dash.cloudflare.com) |
+Gather these before running any commands:
+
+| # | What you need | Where to get it | Takes |
+|---|--------------|-----------------|-------|
+| 1 | GitHub account | [github.com](https://github.com) | 2 min |
+| 2 | OpenAI API key | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) | 2 min |
+| 3 | Telegram bot token | [@BotFather](https://t.me/BotFather) → `/newbot` | 2 min |
+| 4 | Telegram chat ID | [@userinfobot](https://t.me/userinfobot) | 1 min |
+| 5 | Cloudflare account (free) | [dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up) | 3 min |
+| 6 | Cloudflare API token | Cloudflare → My Profile → API Tokens | 2 min |
+| 7 | KV namespace ID | Workers & Pages → KV → Create namespace | 2 min |
+| 8 | Node.js 18+ | [nodejs.org](https://nodejs.org) | 3 min |
+| 9 | Python 3.10+ | [python.org](https://python.org) | 3 min |
+
+> ⚠️ **Tokens are secrets.** Never paste them into files tracked by git.
+> Store them in GitHub Secrets only. → [docs/security.md](docs/security.md)
+
+---
+
+## Why Cloudflare? (free tier is enough)
+
+Cloudflare KV free plan covers this workflow easily:
+
+| Resource | Free allowance | This template uses |
+|----------|---------------|--------------------|
+| KV reads | 100,000 / day | ~10 / day |
+| KV writes | 1,000 / day | ~5 / day |
+| KV storage | 1 GB | < 1 MB |
+| Worker requests | 100,000 / day | handled by quiz-publish-bot |
+
+No credit card required. → [cloudflare.com/plans](https://www.cloudflare.com/plans/)
 
 ---
 
@@ -43,62 +65,85 @@ Blog builds and deploys to GitHub Pages
 
 ### 1. Use this template
 
-Click **Use this template** → **Create a new repository** on GitHub.
+Click **Use this template → Create a new repository** on GitHub.
 
 Or clone:
+
+**Mac**
 ```bash
-git clone https://github.com/YOUR_USERNAME/blog-starter.git my-blog
+git clone https://github.com/wjdghtls95/blog-starter.git my-blog
 cd my-blog
+git remote set-url origin https://github.com/YOUR_USERNAME/my-blog.git
+git push -u origin main
 ```
 
-### 2. Choose your UI
+**Windows (PowerShell)**
+```powershell
+git clone https://github.com/wjdghtls95/blog-starter.git my-blog
+cd my-blog
+git remote set-url origin https://github.com/YOUR_USERNAME/my-blog.git
+git push -u origin main
+```
 
-See [docs/theming.md](docs/theming.md) for options:
+### 2. Choose your blog UI
 
-| Option | Best for |
-|--------|---------|
-| [AstroPaper](https://astro-paper.pages.dev) | Minimal dev blog, built-in search |
-| [Astro Nano](https://astro-nano-demo.vercel.app) | Ultra-minimal, zero JS |
-| [Astro Wind](https://astrowind.vercel.app) | Landing page + blog |
-| [Tailwind CSS](https://tailwindcss.com/docs) | Build your own |
-| [shadcn/ui](https://ui.shadcn.com/docs/installation/astro) | React components in Astro |
-| [Daisy UI](https://daisyui.com/docs/install/) | Pre-made Tailwind themes |
+This template is framework-agnostic — pick a theme or build your own. See [docs/theming.md](docs/theming.md) for full options:
 
-### 3. Set up GitHub Secrets
+| Option | Style | Docs |
+|--------|-------|------|
+| [AstroPaper](https://astro-paper.pages.dev) | Minimal, dark/light, built-in search | [github.com/satnaing/astro-paper](https://github.com/satnaing/astro-paper) |
+| [Astro Nano](https://astro-nano-demo.vercel.app) | Ultra-minimal, zero JS | [github.com/markhorn-dev/astro-nano](https://github.com/markhorn-dev/astro-nano) |
+| [Astro Wind](https://astrowind.vercel.app) | Landing + blog, Tailwind | [github.com/onwidget/astrowind](https://github.com/onwidget/astrowind) |
+| [Tailwind CSS](https://tailwindcss.com/docs) | Build your own | [tailwindcss.com/docs](https://tailwindcss.com/docs) |
+| [shadcn/ui](https://ui.shadcn.com/docs/installation/astro) | React components | [ui.shadcn.com](https://ui.shadcn.com) |
+| [Daisy UI](https://daisyui.com/docs/install/) | Pre-built Tailwind themes | [daisyui.com](https://daisyui.com) |
 
-Go to **Settings → Secrets and variables → Actions** and add:
+> Want a ready-made blog with custom design? → Use a full Astro theme as your base and put the files from this template on top.
+> If you build a custom blog view template, consider creating a separate `blog-template` repo for the design layer.
 
-| Secret | Where to get it |
-|--------|----------------|
-| `OPENAI_API_KEY` | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
-| `TELEGRAM_BOT_TOKEN` | [@BotFather](https://t.me/BotFather) → `/newbot` |
-| `TELEGRAM_CHAT_ID` | Message [@userinfobot](https://t.me/userinfobot) |
-| `CF_ACCOUNT_ID` | Cloudflare dashboard URL |
-| `CF_API_TOKEN` | Cloudflare → My Profile → API Tokens |
-| `KV_NAMESPACE_ID` | Workers & Pages → KV → your namespace ID |
+**Install your chosen theme (Mac / Windows — same command):**
+```bash
+npm create astro@latest -- --template satnaing/astro-paper .
+npm install
+```
 
-> ⚠️ See [docs/security.md](docs/security.md) — never commit real tokens to git.
+### 3. Add GitHub Secrets
+
+Go to **Settings → Secrets and variables → Actions → New repository secret**
+
+| Secret | Value |
+|--------|-------|
+| `OPENAI_API_KEY` | From checklist #2 |
+| `TELEGRAM_BOT_TOKEN` | From checklist #3 |
+| `TELEGRAM_CHAT_ID` | From checklist #4 |
+| `CF_ACCOUNT_ID` | From Cloudflare dashboard URL |
+| `CF_API_TOKEN` | From checklist #6 |
+| `KV_NAMESPACE_ID` | From checklist #7 |
 
 ### 4. Enable GitHub Pages
 
 Repository **Settings → Pages → Source**: set to **GitHub Actions**.
 
-### 5. Set up the quiz bot
+### 5. Deploy the Telegram bot
 
-Deploy [quiz-publish-bot](https://github.com/YOUR_USERNAME/quiz-publish-bot) separately — it handles the Telegram bot commands and publishes posts.
+Deploy [quiz-publish-bot](https://github.com/wjdghtls95/quiz-publish-bot) separately — it handles `/publish`, `/quiz`, `/skip`, `/postpone` commands.
 
-### 6. Write your first post
+### 6. Write your first draft
 
+**Mac**
 ```bash
-# Create a draft
 cat > drafts/my-first-post.md << 'EOF'
 ---
 title: My First Post
 date: 2026-07-23
-source: Obsidian/path/to/original.md
+description: A short summary for SEO
+tags: [typescript]
+source: path/to/original-notes.md
 ---
 
-Your content here.
+## Introduction
+
+Content goes here.
 EOF
 
 git add drafts/my-first-post.md
@@ -106,7 +151,28 @@ git commit -m "draft: my first post"
 git push
 ```
 
-GitHub Actions will generate a quiz and notify you on Telegram.
+**Windows (PowerShell)**
+```powershell
+@"
+---
+title: My First Post
+date: 2026-07-23
+description: A short summary for SEO
+tags: [typescript]
+source: path/to/original-notes.md
+---
+
+## Introduction
+
+Content goes here.
+"@ | Out-File -FilePath drafts\my-first-post.md -Encoding UTF8
+
+git add drafts/my-first-post.md
+git commit -m "draft: my first post"
+git push
+```
+
+GitHub Actions will generate a quiz and send a Telegram notification.
 
 ---
 
@@ -116,21 +182,24 @@ GitHub Actions will generate a quiz and notify you on Telegram.
 blog-starter/
 ├── .github/workflows/
 │   ├── quiz-pipeline.yml    # triggers on push to drafts/
-│   ├── publish.yml          # triggers via Telegram bot /publish
-│   └── direct-publish.yml   # triggers on push to direct/
+│   ├── publish.yml          # triggers via Telegram /publish
+│   └── direct-publish.yml   # triggers on push to direct/ (no quiz)
 ├── docs/
+│   ├── README.ko.md         # 한국어 가이드
+│   ├── SETUP.md             # Detailed setup (EN)
+│   ├── SETUP.ko.md          # 상세 설치 가이드 (KO)
 │   ├── theming.md           # UI library options
-│   └── security.md          # Token security guide
+│   └── security.md          # Token security rules
 ├── drafts/                  # Write here — push triggers quiz generation
-├── direct/                  # Push here to bypass quiz and publish directly
+├── direct/                  # Push here to publish without quiz
 ├── scripts/
-│   └── generate-quiz.py     # Quiz generation script
+│   └── generate-quiz.py     # Quiz generation script (runs in GitHub Actions)
 ├── src/
 │   ├── content/posts/       # Published posts live here
-│   └── assets/blog/         # Images for posts
+│   └── assets/blog/         # Post images
 ├── .env.example             # Environment variable reference
-├── .gitignore
-└── blog-queue.template.md   # Copy to blog-queue.md (gitignored)
+├── .gitignore               # blog-queue.md is gitignored
+└── blog-queue.template.md   # Copy to blog-queue.md (stays local)
 ```
 
 ---
@@ -141,9 +210,9 @@ blog-starter/
 ---
 title: Post Title
 date: 2026-07-23
-description: One-line summary for SEO
+description: One-line SEO summary
 tags: [typescript, nestjs]
-source: Obsidian/path/to/source.md   # shown in Telegram notification
+source: path/to/original-notes.md   # shown in Telegram notification
 ---
 ```
 
@@ -154,8 +223,18 @@ source: Obsidian/path/to/source.md   # shown in Telegram notification
 | Workflow | Trigger | What it does |
 |----------|---------|-------------|
 | `quiz-pipeline` | Push to `drafts/` | Generates quiz, notifies Telegram |
-| `publish` | Telegram `/publish` command | Moves draft to posts, builds site |
-| `direct-publish` | Push to `direct/` | Publishes without quiz |
+| `publish` | Telegram `/publish` | Moves draft → posts, builds and deploys |
+| `direct-publish` | Push to `direct/` | Publishes directly without quiz |
+
+---
+
+## Docs
+
+- [docs/README.ko.md](docs/README.ko.md) — 한국어 가이드
+- [docs/SETUP.md](docs/SETUP.md) — Detailed setup guide (EN)
+- [docs/SETUP.ko.md](docs/SETUP.ko.md) — 상세 설치 가이드 (한국어)
+- [docs/theming.md](docs/theming.md) — UI library options with docs links
+- [docs/security.md](docs/security.md) — Token security rules
 
 ---
 
