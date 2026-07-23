@@ -161,4 +161,4 @@ source: Obsidian/path/to/source.md   # shown in Telegram notification
 
 ## Related
 
-- [quiz-publish-bot](https://github.com/YOUR_USERNAME/quiz-publish-bot) — the Telegram bot that manages the publish queue
+- [quiz-publish-bot](https://github.com/wjdghtls95/quiz-publish-bot) — the Telegram bot that manages the publish queue

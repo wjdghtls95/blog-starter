@@ -160,4 +160,4 @@ source: Obsidian/경로/파일.md   # Telegram 알림에 표시됨
 
 ## 관련 레포
 
-- [quiz-publish-bot](https://github.com/YOUR_USERNAME/quiz-publish-bot) — 발행 대기열을 관리하는 Telegram 봇
+- [quiz-publish-bot](https://github.com/wjdghtls95/quiz-publish-bot) — 발행 대기열을 관리하는 Telegram 봇
