@@ -1,0 +1,33 @@
+name: Direct Publish
+
+on:
+  push:
+    paths:
+      - 'direct/**'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Move direct files to posts
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'direct/*.md' 'direct/*.mdx')
+          for FILE in $CHANGED; do
+            FILENAME=$(basename "$FILE")
+            cp "$FILE" "src/content/posts/$FILENAME"
+          done
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/content/posts/
+          git diff --cached --quiet || git commit -m "publish: direct post"
+          git push

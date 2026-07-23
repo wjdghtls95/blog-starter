@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+.astro/
+
+# Environment variables — never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# Personal queue file — local only, do not commit
+blog-queue.md
+
+# Editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
