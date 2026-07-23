@@ -112,23 +112,13 @@ git push -u origin main
 
 ### 2. Choose your blog UI
 
-This template is framework-agnostic — pick a theme or build your own. See [docs/theming.md](docs/theming.md) for full options:
+Pick any free Astro theme and use it as the base — then put the files from this template on top.
 
-| Option | Style | Docs |
-|--------|-------|------|
-| [AstroPaper](https://astro-paper.pages.dev) | Minimal, dark/light, built-in search | [github.com/satnaing/astro-paper](https://github.com/satnaing/astro-paper) |
-| [Astro Nano](https://astro-nano-demo.vercel.app) | Ultra-minimal, zero JS | [github.com/markhorn-dev/astro-nano](https://github.com/markhorn-dev/astro-nano) |
-| [Astro Wind](https://astrowind.vercel.app) | Landing + blog, Tailwind | [github.com/onwidget/astrowind](https://github.com/onwidget/astrowind) |
-| [Tailwind CSS](https://tailwindcss.com/docs) | Build your own | [tailwindcss.com/docs](https://tailwindcss.com/docs) |
-| [shadcn/ui](https://ui.shadcn.com/docs/installation/astro) | React components | [ui.shadcn.com](https://ui.shadcn.com) |
-| [Daisy UI](https://daisyui.com/docs/install/) | Pre-built Tailwind themes | [daisyui.com](https://daisyui.com) |
-
-> Want a ready-made blog with custom design? → Use a full Astro theme as your base and put the files from this template on top.
-> If you build a custom blog view template, consider creating a separate `blog-template` repo for the design layer.
+→ **[astro.build/themes](https://astro.build/themes/)** (filter by Free)
 
 **Install your chosen theme (Mac / Windows — same command):**
 ```bash
-npm create astro@latest -- --template satnaing/astro-paper .
+npm create astro@latest -- --template <theme-name> .
 npm install
 ```
 
