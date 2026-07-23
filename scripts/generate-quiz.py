@@ -54,20 +54,25 @@ def send_telegram(text):
 
 # ===== Quiz Generation =====
 
-QUIZ_PROMPT = f"""Read the following post and create 10 quiz questions.
+QUIZ_PROMPT = f"""Read the following blog post and create exactly 10 quiz questions.
 
-Rules:
-- At least 1 question per H2 section
-- Questions must require reading the full post
-- 7 multiple choice (easy 2, medium 3, hard 2)
-- 3 essay (medium 1, hard 2)
-- Return ONLY the JSON below, no other text
+CRITICAL RULES — read carefully before writing any question:
+- ALL questions MUST be answerable using ONLY the content provided below
+- Do NOT ask about general knowledge, programming concepts, tools, or terminology unless they are explicitly explained IN THIS POST
+- A valid question: someone who only read this post can answer it without outside knowledge
+- An INVALID question: "What is X?" where X is not defined in this post, or general trivia unrelated to this post's specific content
+- At least 1 question per H2 section (## heading)
+- Questions must test understanding of THIS post's specific arguments, examples, and conclusions
+
+Question counts: 7 multiple choice (easy×2, medium×3, hard×2) · 3 essay (medium×1, hard×2)
+
+Return ONLY the JSON below, no other text:
 
 {{
   "title": "post title",
   "questions": [
-    {{"type": "multiple", "difficulty": "easy", "q": "question", "options": ["A. option", "B. option", "C. option", "D. option"], "answer": "A", "section": "section name"}},
-    {{"type": "essay", "difficulty": "hard", "q": "question", "section": "section name"}}
+    {{"type": "multiple", "difficulty": "easy", "q": "question text", "options": ["A. option", "B. option", "C. option", "D. option"], "answer": "A", "section": "H2 section name"}},
+    {{"type": "essay", "difficulty": "hard", "q": "question text", "modelAnswer": "2-3 sentence model answer covering the key concepts from this post", "section": "H2 section name"}}
   ]
 }}
 
@@ -139,8 +144,8 @@ mc = [q for q in quiz["questions"] if q["type"] == "multiple"]
 essay = [q for q in quiz["questions"] if q["type"] == "essay"]
 quiz["questions"] = mc + essay
 quiz["draftFile"] = DRAFT_FILE
-quiz["content"] = content[:2000]
 quiz["userAnswers"] = {}
+quiz["essayGrades"] = {}
 
 # ===== Queue Management =====
 
