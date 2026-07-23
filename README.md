@@ -9,19 +9,43 @@
 
 ## What this does
 
+### Without Obsidian
+
 ```
-You write a draft in drafts/
+Write a draft in drafts/
     ↓
 Push to GitHub
     ↓
-GitHub Actions: quiz generated via OpenAI → stored in Cloudflare KV
+GitHub Actions: quiz generated → stored in Cloudflare KV
 Telegram notification sent
     ↓
-You answer the quiz in Telegram (via quiz-publish-bot)
+Answer the quiz in Telegram
     ↓
-/publish → post moves to src/content/posts/
+/발행 → post moves to src/content/posts/
 Blog builds and deploys to GitHub Pages
 ```
+
+### With Obsidian (recommended)
+
+Obsidian is where you write and refine notes. The blog is where you publish the polished version.
+
+```
+Write notes in Obsidian vault
+    ↓
+Copy/export finished note to drafts/
+Add source: path/to/note.md in frontmatter
+    ↓
+git push
+    ↓
+Telegram: "퀴즈 등록됐습니다 — 소스: path/to/note.md"
+    ↓
+Answer the quiz in Telegram (proves you read it)
+    ↓
+/발행 → GitHub Pages
+```
+
+**Why the `source:` field?**
+The Telegram notification shows the Obsidian file path so you know which note the quiz is about — useful when you have multiple drafts queued.
 
 ---
 
@@ -40,6 +64,7 @@ Gather these before running any commands:
 | 7 | KV namespace ID | Workers & Pages → KV → Create namespace | 2 min |
 | 8 | Node.js 18+ | [nodejs.org](https://nodejs.org) | 3 min |
 | 9 | Python 3.10+ | [python.org](https://python.org) | 3 min |
+| 10 | Obsidian (optional) | [obsidian.md](https://obsidian.md) | 5 min |
 
 > ⚠️ **Tokens are secrets.** Never paste them into files tracked by git.
 > Store them in GitHub Secrets only. → [docs/security.md](docs/security.md)
