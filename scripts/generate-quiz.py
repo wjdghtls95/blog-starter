@@ -3,16 +3,19 @@ import json
 import hashlib
 import requests
 from datetime import datetime, timezone, timedelta
-from openai import OpenAI
 
 DRAFT_FILE = os.environ["DRAFT_FILE"]
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 CF_ACCOUNT_ID = os.environ["CF_ACCOUNT_ID"]
 CF_API_TOKEN = os.environ["CF_API_TOKEN"]
 KV_NAMESPACE_ID = os.environ["KV_NAMESPACE_ID"]
 QUEUE_MAX = 5
+
+# ===== LLM Provider =====
+# LLM_PROVIDER: openai (default) | anthropic | groq | openai-compatible
+# Set only the API key for the provider you're using.
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "openai")
 
 with open(DRAFT_FILE, "r", encoding="utf-8") as f:
     content = f.read()
@@ -51,9 +54,7 @@ def send_telegram(text):
 
 # ===== Quiz Generation =====
 
-client = OpenAI(api_key=OPENAI_API_KEY)
-
-prompt = f"""Read the following post and create 10 quiz questions.
+QUIZ_PROMPT = f"""Read the following post and create 10 quiz questions.
 
 Rules:
 - At least 1 question per H2 section
@@ -73,14 +74,65 @@ Rules:
 Post content:
 {content}"""
 
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    max_tokens=2000,
-    response_format={"type": "json_object"},
-    messages=[{"role": "user", "content": prompt}],
-)
 
-quiz = json.loads(response.choices[0].message.content)
+def call_llm(prompt: str) -> str:
+    """Call the configured LLM provider. Returns a JSON string."""
+
+    if LLM_PROVIDER == "anthropic":
+        import anthropic
+        client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        msg = client.messages.create(
+            model=os.environ.get("LLM_MODEL", "claude-haiku-4-5-20251001"),
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return msg.content[0].text
+
+    elif LLM_PROVIDER == "groq":
+        # Groq uses the OpenAI SDK with a different base_url (free tier available)
+        from openai import OpenAI
+        client = OpenAI(
+            api_key=os.environ["GROQ_API_KEY"],
+            base_url="https://api.groq.com/openai/v1",
+        )
+        resp = client.chat.completions.create(
+            model=os.environ.get("LLM_MODEL", "llama-3.1-8b-instant"),
+            max_tokens=2000,
+            response_format={"type": "json_object"},
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.choices[0].message.content
+
+    elif LLM_PROVIDER == "openai-compatible":
+        # For Ollama, Together AI, OpenRouter, etc.
+        # Set LLM_BASE_URL (e.g. http://localhost:11434/v1) and LLM_MODEL
+        from openai import OpenAI
+        client = OpenAI(
+            api_key=os.environ.get("LLM_API_KEY", "ollama"),
+            base_url=os.environ["LLM_BASE_URL"],
+        )
+        resp = client.chat.completions.create(
+            model=os.environ["LLM_MODEL"],
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.choices[0].message.content
+
+    else:
+        # Default: OpenAI
+        from openai import OpenAI
+        client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+        resp = client.chat.completions.create(
+            model=os.environ.get("LLM_MODEL", "gpt-4o-mini"),
+            max_tokens=2000,
+            response_format={"type": "json_object"},
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.choices[0].message.content
+
+
+quiz_json_str = call_llm(QUIZ_PROMPT)
+quiz = json.loads(quiz_json_str)
 
 # Multiple choice first, essay last
 mc = [q for q in quiz["questions"] if q["type"] == "multiple"]
@@ -103,16 +155,13 @@ if len(queue) >= QUEUE_MAX:
     )
     raise SystemExit(0)
 
-# Store quiz under unique key (7-day TTL)
 slug = hashlib.md5(DRAFT_FILE.encode()).hexdigest()[:8]
 quiz_key = f"pending_quiz_{slug}"
 put_kv(quiz_key, json.dumps(quiz, ensure_ascii=True), expiration_ttl=7 * 86400)
 
-# Add to queue
 queue.append({"file": DRAFT_FILE, "title": quiz["title"], "quizKey": quiz_key})
 put_kv("PENDING_QUEUE", json.dumps(queue, ensure_ascii=True))
 
-# Set NEXT_QUIZ_DATE to today if not already set
 existing_date = get_kv("NEXT_QUIZ_DATE")
 if not existing_date:
     today_kst = (datetime.now(timezone.utc) + timedelta(hours=9)).strftime("%Y-%m-%d")
