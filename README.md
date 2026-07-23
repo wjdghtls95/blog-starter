@@ -151,7 +151,22 @@ Repository **Settings → Pages → Source**: set to **GitHub Actions**.
 
 ### 5. Deploy the Telegram bot
 
-Deploy [quiz-publish-bot](https://github.com/wjdghtls95/quiz-publish-bot) separately — it handles `/publish`, `/quiz`, `/skip`, `/postpone` commands.
+Deploy [quiz-publish-bot](https://github.com/wjdghtls95/quiz-publish-bot) separately — it handles all bot commands.
+
+Key commands once deployed:
+
+| Korean | English | What it does |
+|--------|---------|-------------|
+| `/퀴즈` | `/quiz` | Start quiz immediately |
+| `/건너뛰기` | `/skip` | Skip quiz, publish tomorrow 08:00 |
+| `/발행` | `/publish` | Publish immediately |
+| `/큐` | `/queue` | Show pending drafts |
+| `/먼저 N` | `/first N` | Move draft #N to front (e.g. `/first 2`) |
+| `/언어 ko\|en` | `/lang ko\|en` | Switch bot language |
+
+Default language is Korean. Both language variants always work.
+
+Send `/start` once after deployment — the bot automatically registers commands for `/` autocomplete. Switching language with `/lang en` also updates the autocomplete list instantly.
 
 ### 6. Write your first draft
 
