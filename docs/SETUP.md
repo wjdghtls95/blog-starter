@@ -64,13 +64,18 @@ pnpm --version
 
 ---
 
-## Step 4 — Get an OpenAI API key
+## Step 4 — Get an LLM API key (pick one provider)
 
-1. Go to [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
-2. Click **Create new secret key**
-3. Copy it — starts with `sk-`
+Quiz generation works with any of these. Pick whichever you already have or prefer:
 
-> ⚠️ This key is shown once. Save it immediately.
+| Provider | Where to get key | `LLM_PROVIDER` value |
+|----------|-----------------|----------------------|
+| OpenAI | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) | `openai` (default) |
+| Groq | [console.groq.com](https://console.groq.com) | `groq` |
+| Anthropic | [console.anthropic.com](https://console.anthropic.com) | `anthropic` |
+| Ollama / OpenRouter / Together | Your provider's dashboard | `openai-compatible` |
+
+> ⚠️ Store API keys in GitHub Secrets only — never commit them.
 
 ---
 
@@ -120,16 +125,25 @@ git push -u origin main
 
 Go to your repo → **Settings → Secrets and variables → Actions → New repository secret**
 
-Add each of these:
+**Required:**
 
 | Name | Value |
 |------|-------|
-| `OPENAI_API_KEY` | From Step 4 |
 | `TELEGRAM_BOT_TOKEN` | From Step 2 |
 | `TELEGRAM_CHAT_ID` | From Step 3 |
 | `CF_ACCOUNT_ID` | From Step 6 |
 | `CF_API_TOKEN` | From Step 6 |
 | `KV_NAMESPACE_ID` | From Step 6 |
+
+**LLM — set only the secrets for your chosen provider (Step 4):**
+
+| Name | Value | When |
+|------|-------|------|
+| `LLM_PROVIDER` | `groq` / `anthropic` / `openai-compatible` | All providers except OpenAI |
+| `GROQ_API_KEY` | Your Groq key | Groq only |
+| `OPENAI_API_KEY` | Your OpenAI key | OpenAI only (also the default if `LLM_PROVIDER` is not set) |
+| `ANTHROPIC_API_KEY` | Your Anthropic key | Anthropic only |
+| `LLM_MODEL` | e.g. `llama-3.1-8b-instant` | Optional — overrides the default model |
 
 ---
 
