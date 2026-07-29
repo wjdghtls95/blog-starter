@@ -153,6 +153,17 @@ def sort_queue(queue, last):
 
 # ===== Format =====
 
+def mark_as_processed(draft_file):
+    """중복 방지 — 이미 있으면 skip."""
+    path = os.path.join(BLOG_DIR, '.processed-drafts')
+    if os.path.exists(path):
+        with open(path) as f:
+            if draft_file in f.read().splitlines():
+                return
+    with open(path, 'a') as f:
+        f.write(draft_file + '\n')
+
+
 def format_review(points):
     return "\n".join(f"  - {p}" for p in points) if points else "  - 이상 없음"
 
@@ -244,9 +255,7 @@ def register_to_queue(result, draft_file, meta):
 
     quiz_date = get_kv("NEXT_QUIZ_DATE")
 
-    # .processed-drafts 업데이트
-    with open(os.path.join(BLOG_DIR, '.processed-drafts'), 'a') as f:
-        f.write(draft_file + '\n')
+    mark_as_processed(draft_file)
 
     try:
         put_kv("LAST_ERROR", json.dumps({"time": None, "message": None}, ensure_ascii=False))
@@ -329,21 +338,38 @@ with open(os.path.join(BLOG_DIR, DRAFT_FILE)) as f:
 meta = parse_frontmatter(draft_content)
 issues = result.get("issues", [])
 
-# ── 검수 실패 ──
+# ── 검수 실패 — opinion 전용이면 개선 제안으로 격하, 아니면 버튼 포함 실패 알림 ──
 if not result.get("passed"):
-    review_text = format_review(result.get("review_points", []))
-    issues_text = format_issues(issues)
-    send_telegram(
-        f"❌ *검수 실패*\n\n"
-        f"파일: `{DRAFT_FILE}`\n\n"
-        f"✅ *잘된 점*\n{review_text}\n\n"
-        f"⚠️ *수정 필요*\n{issues_text}"
-    )
-    save_error(f"검수 실패 — {DRAFT_FILE}\n" + "\n".join(
-        i if isinstance(i, str) else f"{i.get('anchor', '')} — {i.get('what', '')}"
-        for i in issues
-    ))
-    sys.exit(0)
+    blocking = [i for i in issues if isinstance(i, dict) and i.get("type") not in ("opinion", "opinion_fix")]
+    if not blocking:
+        # opinion 이슈만 있으면 passed: true로 처리
+        result["passed"] = True
+    else:
+        review_text = format_review(result.get("review_points", []))
+        issues_text = format_issues(issues)
+        slug = hashlib.md5(DRAFT_FILE.encode()).hexdigest()[:8]
+        pending_key = f"pending_approval_{slug}"
+        put_kv(pending_key, json.dumps({**result, **meta, "draftFile": DRAFT_FILE}, ensure_ascii=True), expiration_ttl=7 * 86400)
+        reply_markup = {
+            "inline_keyboard": [[
+                {"text": "✅ 그냥 올리기", "callback_data": json.dumps({"a": "approve", "k": slug})},
+                {"text": "✏️ 수정할게요", "callback_data": json.dumps({"a": "reject", "k": slug})},
+            ]]
+        }
+        send_telegram(
+            f"❌ *검수 실패*\n\n"
+            f"파일: `{DRAFT_FILE}`\n\n"
+            f"✅ *잘된 점*\n{review_text}\n\n"
+            f"⚠️ *수정 필요*\n{issues_text}\n\n"
+            f"어떻게 하시겠습니까?",
+            reply_markup=reply_markup,
+        )
+        save_error(f"검수 실패 — {DRAFT_FILE}\n" + "\n".join(
+            i if isinstance(i, str) else f"{i.get('anchor', '')} — {i.get('what', '')}"
+            for i in issues
+        ))
+        mark_as_processed(DRAFT_FILE)
+        sys.exit(0)
 
 # ── devlog → 퀴즈 없이 안내 ──
 if meta["category"] == "devlog":
@@ -354,8 +380,7 @@ if meta["category"] == "devlog":
         f"✅ *검수 통과*\n{review_text}\n\n"
         f"`direct/` 폴더로 이동 후 push하면 바로 발행됩니다"
     )
-    with open(os.path.join(BLOG_DIR, '.processed-drafts'), 'a') as f:
-        f.write(DRAFT_FILE + '\n')
+    mark_as_processed(DRAFT_FILE)
     sys.exit(0)
 
 # ── 개선 제안 있음 → 인라인 버튼 ──
@@ -384,8 +409,7 @@ if issues:
         reply_markup=reply_markup,
     )
     # 재처리 방지 — "수정할게요" 클릭 시 Worker가 REVISION_LIST에 추가해 다음 cron에서 제거
-    with open(os.path.join(BLOG_DIR, '.processed-drafts'), 'a') as f:
-        f.write(DRAFT_FILE + '\n')
+    mark_as_processed(DRAFT_FILE)
     print(f"개선 제안 — 버튼 응답 대기 중: {result['title']}")
     sys.exit(0)
 
