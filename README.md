@@ -173,12 +173,16 @@ Key commands once deployed:
 
 | Korean | English | What it does |
 |--------|---------|-------------|
+| `/start` | `/start` | Status + queue count |
+| `/상태` | `/status` | Full status — queue, active quiz, last error |
 | `/퀴즈` | `/quiz` | Start quiz immediately |
 | `/건너뛰기` | `/skip` | Skip quiz, publish tomorrow 08:00 |
 | `/발행` | `/publish` | Publish immediately |
+| `/미루기` | `/postpone` | Postpone today's quiz to tomorrow 18:00 |
 | `/큐` | `/queue` | Show pending drafts |
 | `/먼저 N` | `/first N` | Move draft #N to front (e.g. `/first 2`) |
 | `/언어 ko\|en` | `/lang ko\|en` | Switch bot language |
+| — | `/error` | Check last pipeline error |
 
 Default language is Korean. Both language variants always work.
 
