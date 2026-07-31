@@ -134,6 +134,7 @@ Go to your repo → **Settings → Secrets and variables → Actions → New rep
 | `CF_ACCOUNT_ID` | From Step 6 |
 | `CF_API_TOKEN` | From Step 6 |
 | `KV_NAMESPACE_ID` | From Step 6 |
+| `BLOG_BASE_URL` | Your blog URL e.g. `https://yourusername.github.io` (used in Telegram publish notification) |
 
 **LLM — set only the secrets for your chosen provider (Step 4):**
 

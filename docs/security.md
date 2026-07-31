@@ -9,6 +9,7 @@
 | `CF_API_TOKEN` | GitHub Secrets only | Put in wrangler.jsonc or .env |
 | `CF_ACCOUNT_ID` | GitHub Secrets only | Commit to public repo |
 | `KV_NAMESPACE_ID` | GitHub Secrets only | Expose in client-side code |
+| `BLOG_BASE_URL` | GitHub Secrets only | Hardcode in workflow YAML |
 
 ## Why tokens must stay secret
 

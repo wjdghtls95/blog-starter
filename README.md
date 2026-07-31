@@ -47,6 +47,25 @@ Answer the quiz in Telegram (proves you read it)
 **Why the `source:` field?**
 The Telegram notification shows the Obsidian file path so you know which note the quiz is about — useful when you have multiple drafts queued.
 
+### With Claude Desktop App (fully automated)
+
+If you use Claude Desktop App, you can set up a scheduled task that automatically scans your Obsidian vault for notes with `blog: ready` in frontmatter and adds them to the backlog — no manual copy needed.
+
+```
+Write note in Obsidian vault
+Add blog: ready to frontmatter
+    ↓
+Claude Desktop App (7AM daily)
+  → scans for blog: ready notes
+  → adds to blog-queue.md backlog
+  → rewrites + generates quiz
+  → registers to Cloudflare KV
+    ↓
+Answer quiz in Telegram → published
+```
+
+This setup requires the SKILL.md pipeline. See `blog-queue.template.md` for the full queue format.
+
 ---
 
 ## Before you start — checklist

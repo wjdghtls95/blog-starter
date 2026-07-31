@@ -120,7 +120,7 @@ git push -u origin main
 
 레포 → **Settings → Secrets and variables → Actions → New repository secret**
 
-아래 6개를 모두 추가:
+아래를 모두 추가:
 
 | 이름 | 값 |
 |------|-----|
@@ -130,6 +130,7 @@ git push -u origin main
 | `CF_ACCOUNT_ID` | 6단계에서 확인 |
 | `CF_API_TOKEN` | 6단계에서 발급 |
 | `KV_NAMESPACE_ID` | 6단계에서 확인 |
+| `BLOG_BASE_URL` | 내 블로그 URL (예: `https://yourusername.github.io`) — Telegram 발행 완료 알림에 사용 |
 
 ---
 

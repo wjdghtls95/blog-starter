@@ -9,19 +9,37 @@
 
 ## 동작 방식
 
+### Obsidian 없이 (기본)
+
 ```
 drafts/ 에 초안 작성
     ↓
 GitHub에 push
     ↓
-GitHub Actions: OpenAI로 퀴즈 생성 → Cloudflare KV 저장
+GitHub Actions: 퀴즈 생성 → Cloudflare KV 저장
 Telegram 알림 수신
     ↓
 Telegram에서 퀴즈 풀기 (quiz-publish-bot 담당)
     ↓
-/publish → 초안이 src/content/posts/ 로 이동
+퀴즈 통과 → GitHub Actions 즉시 발행
+초안이 src/content/posts/ 로 이동
 블로그 빌드 후 GitHub Pages 배포
 ```
+
+### Claude Desktop App + Obsidian (완전 자동화)
+
+```
+Obsidian 학습 노트 작성
+frontmatter에 blog: ready 추가
+    ↓
+Claude Desktop App (매일 7AM)
+  → blog: ready 파일 스캔 → backlog 자동 추가
+  → 재작성 + 검수 + 퀴즈 생성 → KV 등록
+    ↓
+저녁 18:00 Telegram 퀴즈 → 통과 → 즉시 발행
+```
+
+이 방식은 SKILL.md 파이프라인 설정이 추가로 필요합니다.
 
 ---
 
